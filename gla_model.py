@@ -6,7 +6,7 @@ from gla import GatedLinearAttention
 class GLATransformer(nn.Module):
     def __init__(self, d_model, n_heads, d_k, d_v, num_layers, vocab_size):
         super().__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.embedding = nn.Embedding(vocab_size, d_model) # [batch_size, seq_len, d_model]
         self.layers = nn.ModuleList([
             GatedLinearAttention(
                 hidden_size=d_model,

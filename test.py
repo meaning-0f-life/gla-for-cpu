@@ -31,6 +31,27 @@ def test_model(model, dataloader, num_examples=5):
     Тестирует модель на нескольких примерах.
     """
     model.eval()  # Переводим модель в режим оценки
+    """
+    # Свой текст
+    custom_text = "hello world"
+
+    # Преобразуем в индексы
+    input_ids = torch.tensor([[char_to_idx.get(c, 0) for c in custom_text]], dtype=torch.long)
+
+    # Передаём в модель
+    with torch.no_grad():
+        logits = model(input_ids)
+
+    # Получаем предсказания
+    predictions = torch.argmax(logits, dim=-1)
+
+    # Декодируем текст
+    predicted_text = "".join([idx_to_char.get(idx.item(), "") for idx in predictions[0]])
+
+    print("Исходный текст:", custom_text)
+    print("Предсказание модели:", predicted_text)
+    """
+
     with torch.no_grad():
         for i, batch in enumerate(dataloader):
             if i >= num_examples:
@@ -40,9 +61,9 @@ def test_model(model, dataloader, num_examples=5):
             if batch.numel() == 0:
                 print(f"Пример {i + 1}: Пустой батч, пропускаем.")
                 continue
-
+            # batch = [batch_size, seq_len]
             # Получаем предсказания модели
-            logits = model(batch)
+            logits = model(batch)  # [batch_size, seq_len, vocab_size]
 
             # Получаем предсказания (индексы с максимальными значениями)
             predictions = torch.argmax(logits, dim=-1)
@@ -90,7 +111,7 @@ dataloader = DataLoader(random_samples, batch_size=1, collate_fn=collate_fn)
 model = GLATransformer(d_model=512, n_heads=4, d_k=64, d_v=64, num_layers=6, vocab_size=vocab_size)
 
 # Загрузка модели из папки models
-model = load_model(model, "gla_model_best_accuracy.pth")
+model = load_model(model, "gla_learned_model.pth")
 
 # Тестирование модели
 test_model(model, dataloader, num_examples=num_examples)

@@ -122,17 +122,18 @@ class GatedLinearAttention(nn.Module):
             )
 
         # Линейные проекции для Q, K, V
-        q = self.q_proj(hidden_states)
-        k = self.k_proj(hidden_states)
-        v = self.v_proj(hidden_states)
-        gk = self.gk_proj(hidden_states)
+        q = self.q_proj(hidden_states) # [batch_size, seq_len, key_dim]
+        k = self.k_proj(hidden_states) # [batch_size, seq_len, key_dim_per_group]
+        v = self.v_proj(hidden_states) # [batch_size, seq_len, value_dim_per_group]
+        gk = self.gk_proj(hidden_states) # [batch_size, seq_len, key_dim_per_group]
 
         # Применение маски, если она есть
-        if attention_mask is not None:
-            v = v * attention_mask[:, -v.shape[-2]:, None]
+        if attention_mask is not None: # attention_mask = [batch_size, seq_len] (матрица 0 и 1)
+            v = v * attention_mask[:, -v.shape[-2]:, None] # v.shape[-2] — это seq_len
+            # Действует на v[i, j, :]
 
         # Перегруппировка Q, K, V для многоголового внимания
-        q = rearrange(q, 'b t (h d) -> b t h d', d=self.head_k_dim)
+        q = rearrange(q, 'b t (h d) -> b t h d', d=self.head_k_dim) # [batch_size, seq_len, num_heads, head_dim]
         if self.num_kv_groups > 1:
             k, gk = (repeat(x, 'b t (h d) -> b t (h g) d', g=self.num_kv_groups, d=self.head_k_dim) for x in (k, gk))
             v = repeat(v, 'b t (h d) -> b t (h g) d', g=self.num_kv_groups, d=self.head_v_dim)
